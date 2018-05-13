@@ -224,10 +224,10 @@ class Enemy:
         self.enemy_options = [
             {
                 'yx': [1,random.randint(3,curses.COLS - 7)],
-                'icon': ['|_|_|','! o !'],
+                'icon': ['\ ||| /',' ! o ! '],
                 'speed': 0.2,
-                'max_fire_count': 2,
-                'width': 5,
+                'max_fire_count': 5,
+                'width': 7,
                 'height': 2,
                 'bullet_icon': '=',
                 'bullet_pattern': 1,
@@ -240,7 +240,7 @@ class Enemy:
                 'yx': [1,random.randint(3,curses.COLS - 7)],
                 'icon': ['|-o-|'],
                 'speed': 1,
-                'max_fire_count': 3,
+                'max_fire_count': 5,
                 'width': 5,
                 'height': 1,
                 'bullet_icon': ':',
@@ -253,14 +253,14 @@ class Enemy:
             {
                 'yx': [1,random.randint(3,curses.COLS - 7)],
                 'icon': ['/-o-\\'],
-                'speed': 0.25,
-                'max_fire_count': 2,
+                'speed': 0.5,
+                'max_fire_count': 6,
                 'width': 5,
                 'height': 1,
                 'bullet_icon': ':',
                 'bullet_pattern': 3,
                 'movement_pattern': 3,
-                'movement_max': random.randint(20,70),
+                'movement_max': random.randint(12,25),
                 'health': 2,
                 'movement_dir':[-1,1][random.randint(0,1)]
             },
@@ -322,6 +322,21 @@ class Enemy:
             if self.movement_ident >= self.movement_max:
                 self.movement_dir *= -1
                 self.movement_ident = 0
+        elif self.movement_pattern == 3:
+            if self.yx[0] < self.movement_max:
+                new_location = [self.yx[0] + self.speed,self.yx[1]]
+            elif self.yx[0] == self.movement_max and self.movement_ident < 200:
+                new_location = [self.yx[0],self.yx[1]  + self.speed * self.movement_dir]
+                self.movement_ident += 1
+                if new_location[1] < 3:
+                    new_location[1] = 3
+                    self.movement_dir *= -1
+                elif new_location[1] > curses.COLS - self.width - 3:
+                    new_location[1] = curses.COLS - self.width - 3
+                    self.movement_dir *= -1
+            else:
+                new_location = [self.yx[0] + self.speed,self.yx[1]]
+
         else:
             new_location = [self.yx[0] + self.speed,self.yx[1]]
 
@@ -330,7 +345,11 @@ class Enemy:
     def fire(self):
         if self.fire_count < self.max_fire_count and random.randint(0,30) == 5:
             self.fire_count += 1
-            return Bullet([self.yx[0]+self.height,self.yx[1]+(self.width-1)/2],1,self.bullet_icon)
+            x_loc = self.yx[1]+(self.width-1)/2
+            if self.width > 5:
+                x_loc = self.yx[1] + random.randint(1,self.width-1)
+
+            return Bullet([self.yx[0]+self.height,x_loc],1,self.bullet_icon)
         return False
 
     def draw(self,screen):
