@@ -15,6 +15,7 @@ class Game:
         self.explosions = []
         self.hero = Hero()
         self.level = 1
+        self.status = 'menu'
 
         self.screen.nodelay(True)
         self.screen.clear()
@@ -23,9 +24,54 @@ class Game:
 
     def play(self):
         while 1:
-            if not self.update():
-                break
+            if self.status == 'menu':
+                if not self.menu():
+                    break
+            else:
+                if not self.update():
+                    break
+
             time.sleep(0.05)
+
+    def menu(self):
+        c = self.screen.getch()
+        curses.flushinp()
+
+        if c == 80 or c == 112:
+            self.status = 'play'
+        elif c == 113 or c == 81:
+            return False
+
+        word_x = self.width / 2 - 41
+
+        if word_x < 1:
+            word_x = 1
+
+        #clear the screen and redraw the bounding box
+        self.screen.erase()
+        self.screen.box()
+
+        self.screen.addstr(5,word_x,' _______  _______  _______  __   __  _______  __    _  _______  __   __  _______ ')
+        self.screen.addstr(6,word_x,'|       ||       ||       ||  |_|  ||       ||  |  | ||   _   ||  | |  ||       |')
+        self.screen.addstr(7,word_x,'|       ||   _   ||  _____||       ||   _   ||   | | ||  | |  ||  | |  ||_     _|')
+        self.screen.addstr(8,word_x,'|      _||  | |  || |_____ |       ||  | |  ||    \| ||  |_|  ||  | |  |  |   |  ')
+        self.screen.addstr(9,word_x,'|     |  |  |_|  ||_____  ||       ||  |_|  || |\    ||       ||  |_|  |  |   |  ')
+        self.screen.addstr(10,word_x,'|     |_ |       | _____| || ||_|| ||       || | |   ||   _   ||       |  |   |  ')
+        self.screen.addstr(11,word_x,'|_______||_______||_______||_|   |_||_______||_|  |__||__| |__||_______|  |___|  ')
+
+
+        message1 = '(P)lay         (Q)uit'
+
+        self.screen.addstr(self.height - 5,self.width/2 - len(message1)/2,message1)
+
+
+
+
+
+        self.screen.refresh()
+
+        return True
+
 
     def update(self):
         garbage_collection = {
@@ -67,6 +113,7 @@ class Game:
             loc = b.move()
             if loc > 1 and loc < self.height - 1:
                 b.yx[0] = loc
+
                 for ei, e in enumerate(self.enemies):
                     if self.check_col(b,e):
                         e.health -= 1
@@ -134,6 +181,7 @@ class Hero:
         self.movement = 0
         self.width = 1
         self.height = 1
+        self.health = 5
 
     def move(self):
         new_location = self.yx[1] + self.movement * self.speed
