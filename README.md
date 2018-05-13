@@ -10,6 +10,7 @@ Cosmonaut is written in Python 2.7. This was a deliberate choice due to its ubiq
 ## Gameplay
 
 At present, gameplay is basic SHMUP territory: Move around and shoot the things that are shooting at you!
+The player opperates on a rail with only left and right movement. Due to the way the terminal/curses handles keypresses movement opperates based on a left/right toggle, rather than the more common hold to move and release to stop moving. 
 
 #### Controls
   | Key           | Action        |
