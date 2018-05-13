@@ -12,11 +12,15 @@ Cosmonaut is written in Python 2.7. This was a deliberate choice due to its ubiq
 At present, gameplay is basic SHMUP territory: Move around and shoot the things that are shooting at you!
 
 #### Controls
-  LEFT KEY   - Move left
-  RIGHT KEY  - Move right
-  UP KEY     - Fire
-  DOWN KEY   - Brakes/Stop Movement
-  SPACE BAR  - Fire (alt)
-  Q KEY      - Quit/Exit
+  | Key           | Action        |
+  |:-------------:|:-------------:|
+  | LEFT          | Move left     |
+  | RIGHT         | Move right    |
+  | SPACE         | Fire/Shoot    |
+  | UP            | Fire/Shoot    |
+  | DOWN          | Brakes/Stop   |
+  | Q             | Quit/Exit     |
+  
+
   
   
