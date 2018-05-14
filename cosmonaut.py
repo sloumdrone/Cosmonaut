@@ -1,5 +1,6 @@
 import curses, time, random, math
 from curses import wrapper
+from os import system
 
 
 class Game:
@@ -185,7 +186,7 @@ class Game:
                 garbage_collection['ex'].append(i)
 
         # draw player
-        self.screen.addch(int(self.hero.yx[0]),int(self.hero.yx[1]),self.hero.icon)
+        self.screen.addstr(int(self.hero.yx[0]),int(self.hero.yx[1]),self.hero.icon)
 
 
         # Add health, title/level, and score
@@ -222,10 +223,10 @@ class Game:
 class Hero:
     def __init__(self):
         self.yx = [curses.LINES - 4, curses.COLS / 2]
-        self.icon = '^'
+        self.icon = '>o<'
         self.speed = 1.2
         self.movement = 0
-        self.width = 1
+        self.width = 3
         self.height = 1
         self.health = 5
 
@@ -236,14 +237,14 @@ class Hero:
         elif new_location < 2:
             self.yx[1] = 2
             self.movement *= -1
-        elif new_location > curses.COLS - 3:
-            self.yx[1] = curses.COLS - 3
+        elif new_location > curses.COLS - self.width - 2:
+            self.yx[1] = curses.COLS - self.width - 2
             self.movement *= -1
 
 
     def fire(self,count):
         if count < 6:
-            return Bullet([self.yx[0],self.yx[1]],-1,'|')
+            return Bullet([self.yx[0],self.yx[1]+1],-1,'|')
         return False
 
 
@@ -448,4 +449,5 @@ class Explosion:
 
 
 if __name__ == "__main__":
+    system('printf "\e[8;50;110;t"t')
     wrapper(Game)
