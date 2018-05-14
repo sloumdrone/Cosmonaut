@@ -96,8 +96,10 @@ class Game:
         self.screen.box()
         message1 = 'Thank you for playing Cosmonaut!'
         self.screen.addstr(self.height - int(self.height/4 * 3),self.width/2 - len(message1)/2,message1)
-        message2 = '(P)lay Again         (Q)uit'
-        self.screen.addstr(self.height - int(self.height/4),self.width/2 - len(message2)/2,message2)
+        message1 = 'Your score was: ' + self.score
+        self.screen.addstr(self.height - int(self.height/2),self.width/2 - len(message2)/2,message2)
+        message3 = '(P)lay Again         (Q)uit'
+        self.screen.addstr(self.height - int(self.height/4),self.width/2 - len(message3)/2,message3)
         self.screen.refresh()
         return True
 
