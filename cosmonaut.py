@@ -4,6 +4,7 @@ from curses import wrapper
 
 class Game:
     def __init__(self,screen):
+        # curses.resizeterm(40,120)
         curses.curs_set(0)
         curses.start_color()
 
@@ -14,6 +15,7 @@ class Game:
         self.enemies = []
         self.explosions = []
         self.hero = Hero()
+        self.score = 0
         self.level = 1
         self.status = 'menu'
 
@@ -26,6 +28,9 @@ class Game:
         while 1:
             if self.status == 'menu':
                 if not self.menu():
+                    break
+            elif self.status == 'death':
+                if not self.death_screen():
                     break
             else:
                 if not self.update():
@@ -61,15 +66,38 @@ class Game:
 
 
         message1 = '(P)lay         (Q)uit'
-
         self.screen.addstr(self.height - 5,self.width/2 - len(message1)/2,message1)
-
-
-
-
-
         self.screen.refresh()
+        return True
 
+
+    def death_screen(self):
+        c = self.screen.getch()
+        curses.flushinp()
+
+        if c == 80 or c == 112:
+            self.hero = Hero()
+            self.bullets = []
+            self.enemies = []
+            self.explosions = []
+            self.level = 1
+            self.status = 'play'
+        elif c == 113 or c == 81:
+            return False
+
+        word_x = self.width / 2 - 41
+
+        if word_x < 1:
+            word_x = 1
+
+        #clear the screen and redraw the bounding box
+        self.screen.erase()
+        self.screen.box()
+        message1 = 'Thank you for playing Cosmonaut!'
+        self.screen.addstr(self.height - int(self.height/4 * 3),self.width/2 - len(message1)/2,message1)
+        message2 = '(P)lay Again         (Q)uit'
+        self.screen.addstr(self.height - int(self.height/4),self.width/2 - len(message2)/2,message2)
+        self.screen.refresh()
         return True
 
 
@@ -113,14 +141,23 @@ class Game:
             loc = b.move()
             if loc > 1 and loc < self.height - 1:
                 b.yx[0] = loc
+                if self.check_col(b,self.hero):
+                    self.hero.health -= 1 # replace 1 with the weapon damage
+                    if self.hero.health <= 0:
+                        self.status = 'death'
+                    garbage_collection['b'].append(i)
+                    continue
 
                 for ei, e in enumerate(self.enemies):
+                    if self.check_col(e,self.hero):
+                        self.status = 'death'
                     if self.check_col(b,e):
                         e.health -= 1
                         if e.yx[0] > 2:
                             e.yx[0] -= 0.5
                         garbage_collection['b'].append(i)
                         if e.health <= 0:
+                            self.score += e.value
                             self.explosions.append(Explosion(b.yx,self.screen))
                             garbage_collection['e'].append(ei)
                             continue
@@ -149,6 +186,15 @@ class Game:
 
         # draw player
         self.screen.addch(int(self.hero.yx[0]),int(self.hero.yx[1]),self.hero.icon)
+
+
+        # Add health, title/level, and score
+        score_add_zeros = 6 - len(str(self.score))
+        score_string = 'SCORE: ' + '0' * score_add_zeros + str(self.score)
+        title_string = 'COSMONAUT (Level ' + str(self.level) + ')'
+        self.screen.addstr(self.height-1,2,'HEALTH: '+'#'*self.hero.health)
+        self.screen.addstr(self.height-1,self.width/2 - len(title_string)/2,title_string)
+        self.screen.addstr(self.height-1, self.width - len(score_string) - 2,score_string)
 
         self.screen.refresh()
 
@@ -197,7 +243,7 @@ class Hero:
 
     def fire(self,count):
         if count < 6:
-            return Bullet([self.yx[0]-1,self.yx[1]],-1,'|')
+            return Bullet([self.yx[0],self.yx[1]],-1,'|')
         return False
 
 
@@ -234,7 +280,8 @@ class Enemy:
                 'movement_pattern': 1,
                 'movement_max': random.randint(20,70),
                 'health': 4,
-                'movement_dir': random.randint(1,5)
+                'movement_dir': random.randint(1,5),
+                'value': random.randint(30,50)
             },
             {
                 'yx': [1,random.randint(3,curses.COLS - 7)],
@@ -248,7 +295,8 @@ class Enemy:
                 'movement_pattern': 2,
                 'movement_max': random.randint(20,70),
                 'health': 1,
-                'movement_dir':[-1,1][random.randint(0,1)]
+                'movement_dir':[-1,1][random.randint(0,1)],
+                'value': random.randint(60,90)
             },
             {
                 'yx': [1,random.randint(3,curses.COLS - 7)],
@@ -262,7 +310,8 @@ class Enemy:
                 'movement_pattern': 3,
                 'movement_max': random.randint(12,25),
                 'health': 2,
-                'movement_dir':[-1,1][random.randint(0,1)]
+                'movement_dir':[-1,1][random.randint(0,1)],
+                'value': random.randint(40,80)
             },
             {
                 'yx': [1,random.randint(3,curses.COLS - 9)],
@@ -276,7 +325,8 @@ class Enemy:
                 'movement_pattern': 4,
                 'movement_max': random.randint(20,70),
                 'health': 6,
-                'movement_dir':[-1,1][random.randint(0,1)]
+                'movement_dir':[-1,1][random.randint(0,1)],
+                'value': random.randint(25,60)
             }
         ]
         self.fire_count = 0
@@ -295,6 +345,7 @@ class Enemy:
         self.movement_dir = self.enemy_options[self.fighter_model]['movement_dir']
         self.movement_max = self.enemy_options[self.fighter_model]['movement_max']
         self.health = self.enemy_options[self.fighter_model]['health']
+        self.value = self.enemy_options[self.fighter_model]['value']
 
     def move(self):
         if self.movement_pattern == 1:
