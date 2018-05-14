@@ -190,12 +190,17 @@ class Game:
 
 
         # Add health, title/level, and score
+        health_display = 'HEALTH: '+'#'*self.hero.health
         score_add_zeros = 6 - len(str(self.score))
         score_string = 'SCORE: ' + '0' * score_add_zeros + str(self.score)
         title_string = 'COSMONAUT (Level ' + str(self.level) + ')'
-        self.screen.addstr(self.height-1,2,'HEALTH: '+'#'*self.hero.health)
-        self.screen.addstr(self.height-1,self.width/2 - len(title_string)/2,title_string)
-        self.screen.addstr(self.height-1, self.width - len(score_string) - 2,score_string)
+        if self.width > len(health_display) + 6:
+            self.screen.addstr(self.height-1,2,health_display)
+        if self.width > len(health_display) + len(score_string) + 10:
+            self.screen.addstr(self.height-1, self.width - len(score_string) - 2,score_string)
+        if self.width > len(health_display) + len(score_string) + len(title_string) + 15:
+            self.screen.addstr(self.height-1,self.width/2 - len(title_string)/2,title_string)
+
 
         self.screen.refresh()
 
