@@ -8,6 +8,13 @@ class Game:
         # curses.resizeterm(40,120)
         curses.curs_set(0)
         curses.start_color()
+        curses.init_color(0, 0, 0, 0)
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+        curses.init_pair(6, curses.COLOR_WHITE, curses.COLOR_BLACK)
 
         self.screen = screen
         self.width = curses.COLS - 1
@@ -18,6 +25,7 @@ class Game:
         self.hero = Hero()
         self.score = 0
         self.level = 1
+        self.enemy_count = 0
         self.status = 'menu'
 
         self.screen.nodelay(True)
@@ -49,6 +57,7 @@ class Game:
             return False
 
         word_x = self.width / 2 - 41
+        word_x2 = self.width / 2 - 18
 
         if word_x < 1:
             word_x = 1
@@ -57,17 +66,22 @@ class Game:
         self.screen.erase()
         self.screen.box()
 
-        self.screen.addstr(5,word_x,' _______  _______  _______  __   __  _______  __    _  _______  __   __  _______ ')
-        self.screen.addstr(6,word_x,'|       ||       ||       ||  |_|  ||       ||  |  | ||   _   ||  | |  ||       |')
-        self.screen.addstr(7,word_x,'|       ||   _   ||  _____||       ||   _   ||   | | ||  | |  ||  | |  ||_     _|')
-        self.screen.addstr(8,word_x,'|      _||  | |  || |_____ |       ||  | |  ||    \| ||  |_|  ||  | |  |  |   |  ')
-        self.screen.addstr(9,word_x,'|     |  |  |_|  ||_____  ||       ||  |_|  || |\    ||       ||  |_|  |  |   |  ')
-        self.screen.addstr(10,word_x,'|     |_ |       | _____| || ||_|| ||       || | |   ||   _   ||       |  |   |  ')
-        self.screen.addstr(11,word_x,'|_______||_______||_______||_|   |_||_______||_|  |__||__| |__||_______|  |___|  ')
+        if self.width > 90:
+            self.screen.addstr(5,word_x,' _______  _______  _______  __   __  _______  __    _  _______  __   __  _______ ',curses.color_pair(1))
+            self.screen.addstr(6,word_x,'|       ||       ||       ||  |_|  ||       ||  |  | ||   _   ||  | |  ||       |',curses.color_pair(2))
+            self.screen.addstr(7,word_x,'|       ||   _   ||  _____||       ||   _   ||   | | ||  | |  ||  | |  ||_     _|',curses.color_pair(3))
+            self.screen.addstr(8,word_x,'|      _||  | |  || |_____ |       ||  | |  ||    \| ||  |_|  ||  | |  |  |   |  ',curses.color_pair(4))
+            self.screen.addstr(9,word_x,'|     |  |  |_|  ||_____  ||       ||  |_|  || |\    ||       ||  |_|  |  |   |  ',curses.color_pair(5))
+            self.screen.addstr(10,word_x,'|     |_ |       | _____| || ||_|| ||       || | |   ||   _   ||       |  |   |  ',curses.color_pair(6))
+            self.screen.addstr(11,word_x,'|_______||_______||_______||_|   |_||_______||_|  |__||__| |__||_______|  |___|  ',curses.color_pair(1))
+        else:
+            self.screen.addstr(8,word_x2,".-. .-. .-. .  . .-. . . .-. . . .-. ",curses.color_pair(1))
+            self.screen.addstr(9,word_x2,"|   | | `-. |\/| | | |\| |-| | |  |  ",curses.color_pair(2))
+            self.screen.addstr(10,word_x2,"`-' `-' `-' '  ` `-' ' ` ` ' `-'  '  ",curses.color_pair(3))
 
 
         message1 = '(P)lay         (Q)uit'
-        self.screen.addstr(self.height - 5,self.width/2 - len(message1)/2,message1)
+        self.screen.addstr(self.height - 5,self.width/2 - len(message1)/2,message1,curses.color_pair(2))
         self.screen.refresh()
         return True
 
@@ -114,8 +128,11 @@ class Game:
         curses.flushinp()
 
         #spawn enemies
-        if len(self.enemies) < self.level * 3 and random.randint(0,30) == 2:
+        if len(self.enemies) < self.level * 2 and random.randint(0,30) == 2:
             self.enemies.append(Enemy())
+            self.enemy_count += 1
+            if self.enemy_count == self.level * 10:
+                self.level += 1
 
         #handle key input
         if c == curses.KEY_RIGHT:
@@ -164,7 +181,7 @@ class Game:
                             self.explosions.append(Explosion(b.yx,self.screen))
                             garbage_collection['e'].append(ei)
                             continue
-                self.screen.addch(int(b.yx[0]),int(b.yx[1]),b.icon)
+                self.screen.addch(int(b.yx[0]),int(b.yx[1]),b.icon,curses.A_BOLD)
             else:
                 garbage_collection['b'].append(i)
 
@@ -188,7 +205,7 @@ class Game:
                 garbage_collection['ex'].append(i)
 
         # draw player
-        self.screen.addstr(int(self.hero.yx[0]),int(self.hero.yx[1]),self.hero.icon)
+        self.screen.addstr(int(self.hero.yx[0]),int(self.hero.yx[1]),self.hero.icon,curses.A_BOLD)
 
 
         # Add health, title/level, and score
@@ -197,11 +214,11 @@ class Game:
         score_string = 'SCORE: ' + '0' * score_add_zeros + str(self.score)
         title_string = 'COSMONAUT (Level ' + str(self.level) + ')'
         if self.width > len(health_display) + 6:
-            self.screen.addstr(self.height-1,2,health_display)
+            self.screen.addstr(self.height-1,2,health_display,curses.color_pair(1))
         if self.width > len(health_display) + len(score_string) + 10:
-            self.screen.addstr(self.height-1, self.width - len(score_string) - 2,score_string)
+            self.screen.addstr(self.height-1, self.width - len(score_string) - 2,score_string,curses.color_pair(2))
         if self.width > len(health_display) + len(score_string) + len(title_string) + 15:
-            self.screen.addstr(self.height-1,self.width/2 - len(title_string)/2,title_string)
+            self.screen.addstr(self.height-1,self.width/2 - len(title_string)/2,title_string,curses.color_pair(3))
 
 
         self.screen.refresh()
@@ -229,7 +246,7 @@ class Game:
 
 class Hero:
     def __init__(self):
-        self.yx = [curses.LINES - 4, curses.COLS / 2]
+        self.yx = [curses.LINES - 6, curses.COLS / 2]
         self.icon = '>o<'
         self.speed = 1.2
         self.movement = 0
@@ -431,30 +448,30 @@ class Explosion:
             self.screen.addch(int(self.yx[0]),int(self.yx[1]),self.icon)
         elif self.count < 6:
             if self.yx[0] - 1 > 2:
-                self.screen.addch(int(self.yx[0] - 1),int(self.yx[1]),self.icon2)
+                self.screen.addch(int(self.yx[0] - 1),int(self.yx[1]),self.icon2,curses.color_pair(1))
             if self.yx[0] + 1 < curses.LINES - 3:
-                self.screen.addch(int(self.yx[0] + 1),int(self.yx[1]),self.icon2)
+                self.screen.addch(int(self.yx[0] + 1),int(self.yx[1]),self.icon2,curses.color_pair(1))
             if self.yx[1] - 1 > 2:
-                self.screen.addch(int(self.yx[0]),int(self.yx[1] - 1),self.icon2)
+                self.screen.addch(int(self.yx[0]),int(self.yx[1] - 1),self.icon2,curses.color_pair(1))
             if self.yx[1] + 1 < curses.COLS - 2:
-                self.screen.addch(int(self.yx[0]),int(self.yx[1] + 1),self.icon2)
+                self.screen.addch(int(self.yx[0]),int(self.yx[1] + 1),self.icon2,curses.color_pair(1))
         elif self.count < 10:
             if self.yx[0] - 2 > 2:
-                self.screen.addch(int(self.yx[0] - 2),int(self.yx[1]),self.icon3)
+                self.screen.addch(int(self.yx[0] - 2),int(self.yx[1]),self.icon3,curses.color_pair(2))
             if self.yx[0] - 1 > 2 and self.yx[1] - 1 > 2:
-                self.screen.addch(int(self.yx[0] - 2),int(self.yx[1]),self.icon3)
+                self.screen.addch(int(self.yx[0] - 2),int(self.yx[1]),self.icon3,curses.color_pair(2))
             if self.yx[0] + 2 < curses.LINES - 3:
-                self.screen.addch(int(self.yx[0] + 2),int(self.yx[1]),self.icon3)
+                self.screen.addch(int(self.yx[0] + 2),int(self.yx[1]),self.icon3,curses.color_pair(2))
             if self.yx[1] - 2 > 2:
-                self.screen.addch(int(self.yx[0]),int(self.yx[1] - 2),self.icon3)
+                self.screen.addch(int(self.yx[0]),int(self.yx[1] - 2),self.icon3,curses.color_pair(2))
             if self.yx[0] + 1 < curses.LINES - 3 and self.yx[1] + 1 < curses.COLS - 2:
-                self.screen.addch(int(self.yx[0] - 2),int(self.yx[1]),self.icon3)
+                self.screen.addch(int(self.yx[0] - 2),int(self.yx[1]),self.icon3,curses.color_pair(2))
             if self.yx[1] + 2 < curses.COLS - 2:
-                self.screen.addch(int(self.yx[0]),int(self.yx[1] + 2),self.icon3)
+                self.screen.addch(int(self.yx[0]),int(self.yx[1] + 2),self.icon3,curses.color_pair(2))
 
 
 
 
 if __name__ == "__main__":
-    system('printf "\e[8;50;110;t"t')
+    # system('printf "\e[8;50;110;t"t')
     wrapper(Game)
