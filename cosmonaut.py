@@ -28,6 +28,8 @@ class Game:
         self.enemy_count = 0
         self.status = 'menu'
 
+        self.cover_animation = [1,2,3,4,5,6]
+
         self.screen.nodelay(True)
         self.screen.clear()
 
@@ -67,13 +69,15 @@ class Game:
         self.screen.box()
 
         if self.width > 90:
-            self.screen.addstr(5,word_x,' _______  _______  _______  __   __  _______  __    _  _______  __   __  _______ ',curses.color_pair(1))
-            self.screen.addstr(6,word_x,'|       ||       ||       ||  |_|  ||       ||  |  | ||   _   ||  | |  ||       |',curses.color_pair(2))
-            self.screen.addstr(7,word_x,'|       ||   _   ||  _____||       ||   _   ||   | | ||  | |  ||  | |  ||_     _|',curses.color_pair(3))
-            self.screen.addstr(8,word_x,'|      _||  | |  || |_____ |       ||  | |  ||    \| ||  |_|  ||  | |  |  |   |  ',curses.color_pair(4))
-            self.screen.addstr(9,word_x,'|     |  |  |_|  ||_____  ||       ||  |_|  || |\    ||       ||  |_|  |  |   |  ',curses.color_pair(5))
-            self.screen.addstr(10,word_x,'|     |_ |       | _____| || ||_|| ||       || | |   ||   _   ||       |  |   |  ',curses.color_pair(6))
-            self.screen.addstr(11,word_x,'|_______||_______||_______||_|   |_||_______||_|  |__||__| |__||_______|  |___|  ',curses.color_pair(1))
+            self.cover_animation = [self.cover_animation.pop()] + self.cover_animation
+
+            self.screen.addstr(5,word_x,' _______  _______  _______  __   __  _______  __    _  _______  __   __  _______ ',curses.color_pair(self.cover_animation[0]))
+            self.screen.addstr(6,word_x,'|       ||       ||       ||  |_|  ||       ||  |  | ||   _   ||  | |  ||       |',curses.color_pair(self.cover_animation[1]))
+            self.screen.addstr(7,word_x,'|       ||   _   ||  _____||       ||   _   ||   | | ||  | |  ||  | |  ||_     _|',curses.color_pair(self.cover_animation[2]))
+            self.screen.addstr(8,word_x,'|      _||  | |  || |_____ |       ||  | |  ||    \| ||  |_|  ||  | |  |  |   |  ',curses.color_pair(self.cover_animation[3]))
+            self.screen.addstr(9,word_x,'|     |  |  |_|  ||_____  ||       ||  |_|  || |\    ||       ||  |_|  |  |   |  ',curses.color_pair(self.cover_animation[4]))
+            self.screen.addstr(10,word_x,'|     |_ |       | _____| || ||_|| ||       || | |   ||   _   ||       |  |   |  ',curses.color_pair(self.cover_animation[5]))
+            self.screen.addstr(11,word_x,'|_______||_______||_______||_|   |_||_______||_|  |__||__| |__||_______|  |___|  ',curses.color_pair(self.cover_animation[0]))
         else:
             self.screen.addstr(8,word_x2,".-. .-. .-. .  . .-. . . .-. . . .-. ",curses.color_pair(1))
             self.screen.addstr(9,word_x2,"|   | | `-. |\/| | | |\| |-| | |  |  ",curses.color_pair(2))
