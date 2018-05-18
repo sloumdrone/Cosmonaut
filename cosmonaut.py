@@ -101,6 +101,7 @@ class Game:
             self.explosions = []
             self.level = 1
             self.status = 'play'
+            self.score = 0
         elif c == 113 or c == 81:
             return False
 
@@ -240,10 +241,13 @@ class Game:
         return True
 
     def check_col(self,obj1, obj2):
-        if obj1.yx[1] > obj2.yx[1] + obj2.width or obj1.yx[0] > obj2.yx[0] + obj2.height or obj2.yx[1] > obj1.yx[1] + obj1.width or obj2.yx[0] > obj1.yx[0] + obj1.width:
-            return False
-        else:
+        if (int(obj1.yx[1]) <= int(obj2.yx[1] + obj2.width) and
+            int(obj1.yx[0]) <= int(obj2.yx[0] + obj2.height + 1) and
+            int(obj2.yx[1]) <= int(obj1.yx[1] + obj1.width) and
+            int(obj2.yx[0]) <= int(obj1.yx[0] + obj1.height + 1)):
             return True
+        else:
+            return False
 
 
 
@@ -254,8 +258,8 @@ class Hero:
         self.icon = '>o<'
         self.speed = 1.2
         self.movement = 0
-        self.width = 3
-        self.height = 1
+        self.width = 2
+        self.height = 0
         self.health = 5
 
     def move(self):
@@ -271,8 +275,8 @@ class Hero:
 
 
     def fire(self,count):
-        if count < 6:
-            return Bullet([self.yx[0],self.yx[1]+1],-1,'|')
+        if count < 5:
+            return Bullet([self.yx[0]-random.randint(1,2),self.yx[1]+1],-1,'|')
         return False
 
 
@@ -282,11 +286,11 @@ class Bullet:
         self.icon = icon
         self.speed = 2.23
         self.dir = dir
-        self.width = 1
-        self.height = 1
+        self.width = 0
+        self.height = 0
 
     def move(self):
-        new_location = self.yx[0] + self.speed * self.dir
+        new_location = int(self.yx[0] + self.speed * self.dir)
         return new_location
 
 
@@ -302,8 +306,8 @@ class Enemy:
                 'icon': ['\ ||| /',' ! o ! '],
                 'speed': 0.2,
                 'max_fire_count': 5,
-                'width': 7,
-                'height': 2,
+                'width': 6,
+                'height': 1,
                 'bullet_icon': '=',
                 'bullet_pattern': 1,
                 'movement_pattern': 1,
@@ -317,8 +321,8 @@ class Enemy:
                 'icon': ['|-o-|'],
                 'speed': 1,
                 'max_fire_count': 5,
-                'width': 5,
-                'height': 1,
+                'width': 4,
+                'height': 0,
                 'bullet_icon': ':',
                 'bullet_pattern': 2,
                 'movement_pattern': 2,
@@ -332,12 +336,12 @@ class Enemy:
                 'icon': ['/-o-\\'],
                 'speed': 0.5,
                 'max_fire_count': 6,
-                'width': 5,
-                'height': 1,
+                'width': 4,
+                'height': 0,
                 'bullet_icon': ':',
                 'bullet_pattern': 3,
                 'movement_pattern': 3,
-                'movement_max': random.randint(12,25),
+                'movement_max': random.randint(5,int(curses.LINES / 2)),
                 'health': 2,
                 'movement_dir':[-1,1][random.randint(0,1)],
                 'value': random.randint(40,80)
@@ -345,10 +349,10 @@ class Enemy:
             {
                 'yx': [1,random.randint(3,curses.COLS - 9)],
                 'icon': ['||_|_||','   V   '],
-                'speed': 0.1,
+                'speed': 0.25,
                 'max_fire_count': 7,
-                'width': 7,
-                'height': 2,
+                'width': 6,
+                'height': 1,
                 'bullet_icon': 'I',
                 'bullet_pattern': 4,
                 'movement_pattern': 4,
@@ -386,8 +390,8 @@ class Enemy:
 
             if new_location[1] < 3:
                 new_location[1] = 3
-            elif new_location[1] > curses.COLS - self.width - 3:
-                new_location[1] = curses.COLS - self.width - 3
+            elif new_location[1] > curses.COLS - self.width - 4:
+                new_location[1] = curses.COLS - self.width - 4
 
         elif self.movement_pattern == 2:
             self.movement_ident += 1
@@ -395,8 +399,8 @@ class Enemy:
             if new_location[1] < 3:
                 new_location[1] = 3
                 self.movement_dir = 1
-            elif new_location[1] > curses.COLS - self.width - 3:
-                new_location[1] = curses.COLS - self.width - 3
+            elif new_location[1] > curses.COLS - self.width - 4:
+                new_location[1] = curses.COLS - self.width - 4
                 self.movement_dir = -1
 
             if self.movement_ident >= self.movement_max:
@@ -411,8 +415,8 @@ class Enemy:
                 if new_location[1] < 3:
                     new_location[1] = 3
                     self.movement_dir *= -1
-                elif new_location[1] > curses.COLS - self.width - 3:
-                    new_location[1] = curses.COLS - self.width - 3
+                elif new_location[1] > curses.COLS - self.width - 4:
+                    new_location[1] = curses.COLS - self.width - 4
                     self.movement_dir *= -1
             else:
                 new_location = [self.yx[0] + self.speed,self.yx[1]]
@@ -429,7 +433,7 @@ class Enemy:
             if self.width > 5:
                 x_loc = self.yx[1] + random.randint(1,self.width-1)
 
-            return Bullet([self.yx[0]+self.height,x_loc],1,self.bullet_icon)
+            return Bullet([self.yx[0]+self.height+1,x_loc],1,self.bullet_icon)
         return False
 
     def draw(self,screen):
