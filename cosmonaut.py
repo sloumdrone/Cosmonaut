@@ -174,8 +174,6 @@ class Game:
                     continue
 
                 for ei, e in enumerate(self.enemies):
-                    if self.check_col(e,self.hero):
-                        self.status = 'death'
                     if self.check_col(b,e):
                         e.health -= 1
                         if e.yx[0] > 2:
@@ -200,6 +198,8 @@ class Game:
                     shot = e.fire()
                     if shot:
                         self.bullets.append(shot)
+                if self.check_col(e,self.hero):
+                    self.status = 'death'
             else:
                 garbage_collection['e'].append(i)
 
