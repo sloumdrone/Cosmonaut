@@ -164,8 +164,8 @@ class Game:
         # move bullets, check bullet collision, add explosions, draw bullets
         for i, b in enumerate(self.bullets):
             loc = b.move()
-            if loc > 1 and loc < self.height - 1:
-                b.yx[0] = loc
+            if loc[0] > 1 and loc[0] < self.height - 1 and loc[1] > 2 and loc[1] < self.width - 3:
+                b.yx = loc
                 if self.check_col(b,self.hero):
                     self.hero.health -= 1 # replace 1 with the weapon damage
                     if self.hero.health <= 0:
@@ -194,8 +194,12 @@ class Game:
             if int(loc[0]) < curses.LINES - 2:
                 e.yx = loc
                 e.draw(self.screen)
-                if abs(e.yx[1] - self.hero.yx[1]) < 15:
-                    shot = e.fire()
+                if e.movement_pattern == 2 or e.movement_pattern == 3:
+                    shot = e.fire(self.get_player_angle(e.yx,self.hero.yx))
+                    if shot:
+                        self.bullets.append(shot)
+                elif abs(e.yx[1] - self.hero.yx[1]) < 15:
+                    shot = e.fire(self.get_player_angle(e.yx,self.hero.yx))
                     if shot:
                         self.bullets.append(shot)
                 if self.check_col(e,self.hero):
@@ -217,13 +221,13 @@ class Game:
         health_display = 'HEALTH: '+'#'*self.hero.health
         score_add_zeros = 6 - len(str(self.score))
         score_string = 'SCORE: ' + '0' * score_add_zeros + str(self.score)
-        title_string = 'COSMONAUT (Level ' + str(self.level) + ')'
+        title_string = 'COSMONAUT [Level ' + str(self.level) + ']'
         if self.width > len(health_display) + 6:
-            self.screen.addstr(self.height-1,2,health_display,curses.color_pair(1))
+            self.screen.addstr(self.height-2,4,health_display,curses.color_pair(1))
         if self.width > len(health_display) + len(score_string) + 10:
-            self.screen.addstr(self.height-1, self.width - len(score_string) - 2,score_string,curses.color_pair(2))
+            self.screen.addstr(self.height-2, self.width - len(score_string) - 4,score_string,curses.color_pair(2))
         if self.width > len(health_display) + len(score_string) + len(title_string) + 15:
-            self.screen.addstr(self.height-1,self.width/2 - len(title_string)/2,title_string,curses.color_pair(3))
+            self.screen.addstr(self.height-2,self.width/2 - len(title_string)/2,title_string,curses.color_pair(3))
 
 
         self.screen.refresh()
@@ -248,6 +252,11 @@ class Game:
             return True
         else:
             return False
+
+    def get_player_angle(self,obj1, obj2):
+       xDiff = obj2[1] - obj1[1] # x coord
+       yDiff = obj2[0] - obj1[0] # y coord
+       return math.atan2(yDiff, xDiff)
 
 
 
@@ -281,24 +290,30 @@ class Hero:
 
 
 class Bullet:
-    def __init__(self,src,dir,icon):
+    def __init__(self,src,dir,icon,angle=False):
         self.yx = src #list
         self.icon = icon
         self.speed = 2.23
         self.dir = dir
         self.width = 0
         self.height = 0
+        self.angle = angle
 
     def move(self):
-        new_location = int(self.yx[0] + self.speed * self.dir)
-        return new_location
+        if not self.angle:
+            new_location = [int(self.yx[0] + self.speed * self.dir),self.yx[1]]
+            return new_location
+        else:
+            deltax = self.speed * math.cos(self.angle)
+            deltay = self.speed * math.sin(self.angle)
+            new_location = [self.yx[0] + deltay,self.yx[1] + deltax]
+            return new_location
 
 
 
 
 
 class Enemy:
-
     def __init__(self):
         self.enemy_options = [
             {
@@ -426,19 +441,23 @@ class Enemy:
 
         return new_location
 
-    def fire(self):
+    def fire(self,angle):
         if self.fire_count < self.max_fire_count and random.randint(0,30) == 5:
             self.fire_count += 1
             x_loc = self.yx[1]+(self.width-1)/2
             if self.width > 5:
                 x_loc = self.yx[1] + random.randint(1,self.width-1)
-
-            return Bullet([self.yx[0]+self.height+1,x_loc],1,self.bullet_icon)
+            if self.movement_pattern in [2,3]:
+                return Bullet([self.yx[0]+self.height+1,x_loc],1,self.bullet_icon,angle)
+            else:
+                return Bullet([self.yx[0]+self.height+1,x_loc],1,self.bullet_icon)
         return False
 
     def draw(self,screen):
         for i, x in enumerate(self.icon):
             screen.addstr(int(self.yx[0])+i,int(self.yx[1]),self.icon[i])
+
+
 
 
 class Explosion:
