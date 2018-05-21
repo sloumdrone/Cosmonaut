@@ -1,6 +1,6 @@
-import curses, time, random, math
+import curses, time, random, math, json
 from curses import wrapper
-from os import system
+from os import system, path
 
 
 class Game:
@@ -27,6 +27,8 @@ class Game:
         self.level = 1
         self.enemy_count = 0
         self.status = 'menu'
+        self.filepath = './cosmo.data'
+        self.printed = False
 
         self.cover_animation = [1,2,3,4,5,6]
 
@@ -94,12 +96,15 @@ class Game:
         c = self.screen.getch()
         curses.flushinp()
 
+
+
         if c == 80 or c == 112:
             self.hero = Hero()
             self.bullets = []
             self.enemies = []
             self.explosions = []
             self.level = 1
+            self.printed = False
             self.status = 'play'
             self.score = 0
         elif c == 113 or c == 81:
@@ -110,13 +115,25 @@ class Game:
         if word_x < 1:
             word_x = 1
 
-        #clear the screen and redraw the bounding box
         self.screen.erase()
         self.screen.box()
+
+        if not self.printed:
+            with open(self.filepath,'r') as highscores:
+                self.highscorelist = highscores.readlines()
+            self.printed = True
+
+        for i, x in enumerate(self.highscorelist):
+            x = x.strip()
+            self.screen.addstr(self.height - int(self.height/2) + i,self.width/2 - int(len(x)/2),x)
+
+
+        #clear the screen and redraw the bounding box
+
         message1 = 'Thank you for playing Cosmonaut!'
         self.screen.addstr(self.height - int(self.height/4 * 3),self.width/2 - len(message1)/2,message1)
-        message2 = 'Your score was: ' + str(self.score)
-        self.screen.addstr(self.height - int(self.height/2),self.width/2 - len(message2)/2,message2)
+        message2 = 'High scores:'
+        self.screen.addstr(self.height - int(self.height/2) - 3,self.width/2 - len(message2)/2,message2)
         message3 = '(P)lay Again         (Q)uit'
         self.screen.addstr(self.height - int(self.height/4),self.width/2 - len(message3)/2,message3)
         self.screen.refresh()
@@ -165,10 +182,16 @@ class Game:
         for i, b in enumerate(self.bullets):
             loc = b.move()
             if loc[0] > 1 and loc[0] < self.height - 1 and loc[1] > 2 and loc[1] < self.width - 3:
+                if b.yx[1] < 2:
+                    b.yx[1] = self.width - 4
+                if b.yx[1] > self.width - 3:
+                    b.yx[1] = 2
                 b.yx = loc
                 if self.check_col(b,self.hero):
                     self.hero.health -= 1 # replace 1 with the weapon damage
                     if self.hero.health <= 0:
+                        with open(self.filepath,'a+') as highscores:
+                            highscores.write(str(self.score) + '\n')
                         self.status = 'death'
                     garbage_collection['b'].append(i)
                     continue
@@ -203,6 +226,8 @@ class Game:
                     if shot:
                         self.bullets.append(shot)
                 if self.check_col(e,self.hero):
+                    with open(self.filepath,'a+') as highscores:
+                        highscores.write(str(self.score) + '\n')
                     self.status = 'death'
             else:
                 garbage_collection['e'].append(i)
@@ -276,11 +301,13 @@ class Hero:
         if new_location >= 2 and new_location <= curses.COLS - 3:
             self.yx[1] = new_location
         elif new_location < 2:
-            self.yx[1] = 2
-            self.movement *= -1
+            self.yx[1] = curses.COLS - (5 + self.width)
+            # self.yx[1] = 2
+            # self.movement *= -1
         elif new_location > curses.COLS - self.width - 2:
-            self.yx[1] = curses.COLS - self.width - 2
-            self.movement *= -1
+            self.yx[1] = 2
+            # self.yx[1] = curses.COLS - self.width - 2
+            # self.movement *= -1
 
 
     def fire(self,count):
@@ -350,7 +377,7 @@ class Enemy:
                 'yx': [1,random.randint(3,curses.COLS - 7)],
                 'icon': ['/-o-\\'],
                 'speed': 0.5,
-                'max_fire_count': 6,
+                'max_fire_count': 10,
                 'width': 4,
                 'height': 0,
                 'bullet_icon': ':',
@@ -442,7 +469,7 @@ class Enemy:
         return new_location
 
     def fire(self,angle):
-        if self.fire_count < self.max_fire_count and random.randint(0,30) == 5:
+        if self.fire_count < self.max_fire_count and random.randint(0,20) == 5 and self.yx[0] < curses.LINES - 8:
             self.fire_count += 1
             x_loc = self.yx[1]+(self.width-1)/2
             if self.width > 5:
