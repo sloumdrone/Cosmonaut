@@ -121,7 +121,9 @@ class Game:
         if not self.printed:
             with open(self.filepath,'r') as highscores:
                 self.highscorelist = highscores.readlines()
+                self.highscorelist.sort(reverse=True)
             self.printed = True
+
 
         for i, x in enumerate(self.highscorelist):
             x = x.strip()
