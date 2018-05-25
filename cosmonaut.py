@@ -120,14 +120,15 @@ class Game:
 
         if not self.printed:
             with open(self.filepath,'r') as highscores:
-                self.highscorelist = highscores.readlines()
+                self.highscorelist = highscores.read().split(',')
+                self.highscorelist = list(map(lambda x: int(x.strip()), self.highscorelist))
                 self.highscorelist.sort(reverse=True)
+                self.highscorelist = self.highscorelist[:9]
             self.printed = True
 
 
         for i, x in enumerate(self.highscorelist):
-            x = x.strip()
-            self.screen.addstr(self.height - int(self.height/2) + i,self.width/2 - int(len(x)/2),x)
+            self.screen.addstr(self.height - int(self.height/2) + i,self.width/2,str(x))
 
 
         #clear the screen and redraw the bounding box
@@ -193,7 +194,7 @@ class Game:
                     self.hero.health -= 1 # replace 1 with the weapon damage
                     if self.hero.health <= 0:
                         with open(self.filepath,'a+') as highscores:
-                            highscores.write(str(self.score) + '\n')
+                            highscores.write(',' + str(self.score))
                         self.status = 'death'
                     garbage_collection['b'].append(i)
                     continue
@@ -229,7 +230,7 @@ class Game:
                         self.bullets.append(shot)
                 if self.check_col(e,self.hero):
                     with open(self.filepath,'a+') as highscores:
-                        highscores.write(str(self.score) + '\n')
+                        highscores.write(',' + str(self.score))
                     self.status = 'death'
             else:
                 garbage_collection['e'].append(i)
