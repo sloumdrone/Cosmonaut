@@ -128,7 +128,10 @@ class Game:
 
 
         for i, x in enumerate(self.highscorelist):
-            self.screen.addstr(self.height - int(self.height/2) + i,self.width/2,str(x))
+            if str(x) != str(self.score):
+                self.screen.addstr(self.height - int(self.height/2) + i,self.width/2,str(x))
+            else:
+                self.screen.addstr(self.height - int(self.height/2) + i,self.width/2,'*'+str(x)+'*',curses.color_pair(2))
 
 
         #clear the screen and redraw the bounding box
