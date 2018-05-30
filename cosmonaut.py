@@ -289,6 +289,7 @@ class Game:
 
 
 
+
 class Hero:
     def __init__(self):
         self.yx = [curses.LINES - 6, curses.COLS / 2]
