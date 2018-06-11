@@ -115,8 +115,10 @@ class Game:
         if word_x < 1:
             word_x = 1
 
+        #clear the screen and redraw the bounding box
         self.screen.erase()
         self.screen.box()
+
 
         if not self.printed:
             with open(self.filepath,'r') as highscores:
@@ -124,22 +126,32 @@ class Game:
                 self.highscorelist = list(map(lambda x: int(x.strip()), self.highscorelist))
                 self.highscorelist.sort(reverse=True)
                 self.highscorelist = self.highscorelist[:9]
+
+
+
+
+
+            with open(self.filepath,'w+') as highscores:
+                highscores.write(str(self.highscorelist[0]))
+                if len(self.highscorelist) > 1:
+                    for score in self.highscorelist[1:]:
+                        highscores.write(',')
+                        highscores.write(str(score))
+
             self.printed = True
 
-
         for i, x in enumerate(self.highscorelist):
-            if str(x) != str(self.score):
-                self.screen.addstr(self.height - int(self.height/2) + i,self.width/2,str(x))
-            else:
-                self.screen.addstr(self.height - int(self.height/2) + i,self.width/2,'*'+str(x)+'*',curses.color_pair(2))
+            self.screen.addstr(self.height - int(self.height/4 * 3) + 7 + i,self.width/2 - 4,' '+str(x))
 
 
-        #clear the screen and redraw the bounding box
+
 
         message1 = 'Thank you for playing Cosmonaut!'
-        self.screen.addstr(self.height - int(self.height/4 * 3),self.width/2 - len(message1)/2,message1)
+        self.screen.addstr(self.height - int(self.height/4 * 3),self.width/2 - 8,message1)
+        message4 = 'Your score: ' + str(self.score)
+        self.screen.addstr(self.height - int(self.height/4 * 3) + 2,self.width/2 - 8,message4)
         message2 = 'High scores:'
-        self.screen.addstr(self.height - int(self.height/2) - 3,self.width/2 - len(message2)/2,message2)
+        self.screen.addstr(self.height - int(self.height/4 * 3) + 5,self.width/2 - 8,message2)
         message3 = '(P)lay Again         (Q)uit'
         self.screen.addstr(self.height - int(self.height/4),self.width/2 - len(message3)/2,message3)
         self.screen.refresh()
@@ -168,7 +180,7 @@ class Game:
         elif c == curses.KEY_LEFT:
             self.hero.movement = -1
         elif c == curses.KEY_UP or c == 32:
-            shot = self.hero.fire(len(self.bullets))
+            shot = self.hero.fire(len([x for x in self.bullets if x.type == 'hero']))
             if shot:
                 self.bullets.append(shot)
         elif c == curses.KEY_DOWN:
@@ -203,7 +215,7 @@ class Game:
                     continue
 
                 for ei, e in enumerate(self.enemies):
-                    if self.check_col(b,e):
+                    if self.check_col(b,e) and b.type == 'hero':
                         e.health -= 1
                         if e.yx[0] > 2:
                             e.yx[0] -= 0.5
@@ -319,12 +331,12 @@ class Hero:
 
     def fire(self,count):
         if count < 5:
-            return Bullet([self.yx[0]-random.randint(1,2),self.yx[1]+1],-1,'|')
+            return Bullet([self.yx[0]-random.randint(1,2),self.yx[1]+1],-1,'|',type='hero')
         return False
 
 
 class Bullet:
-    def __init__(self,src,dir,icon,angle=False):
+    def __init__(self,src,dir,icon,angle=False,type='enemy'):
         self.yx = src #list
         self.icon = icon
         self.speed = 2.23
@@ -332,6 +344,7 @@ class Bullet:
         self.width = 0
         self.height = 0
         self.angle = angle
+        self.type = type
 
     def move(self):
         if not self.angle:
